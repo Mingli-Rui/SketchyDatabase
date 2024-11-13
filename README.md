@@ -8,6 +8,11 @@ The [**homepage**](http://sketchy.eye.gatech.edu/) of the original project.
 
 Get the dataset via Google Drive [sketchydataset](https://drive.google.com/file/d/0B7ISyeE8QtDdTjE1MG9Gcy1kSkE/view?usp=sharing&resourcekey=0-r6nB4crmdU-LK7H38xnOUw) [SketchyDataset Intro](https://github.com/CDOTAD/SketchyDatabase/blob/master/SketchyDataset_README.md)
 
+# How to use it
+
+1. Download dataset
+
+
 # DataSet
 
 Sketchy Database

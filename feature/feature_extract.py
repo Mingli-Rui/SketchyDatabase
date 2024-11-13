@@ -7,23 +7,23 @@ import os
 
 # The script to extract sketches or photos' features using the trained model
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-train_set_root = '/data1/zzl/dataset/sketch-triplet-train'
-test_set_root = '/data1/zzl/dataset/sketch-triplet-test'
+train_set_root = '/Users/minglirui/gpt/SketchyDatabase/dataset/sketch-triplet-train'
+test_set_root = '/Users/minglirui/gpt/SketchyDatabase/dataset/sketch-triplet-test'
 
-train_photo_root = '/data1/zzl/dataset/photo-train'
-test_photo_root = '/data1/zzl/dataset/photo-test'
+train_photo_root = '/Users/minglirui/train_data/rendered_256x256/256x256/photo/tx_000000000000/airplane'
+test_photo_root = '/Users/minglirui/train_data/rendered_256x256/256x256/photo/tx_000000000000/airplane'
 
 # The trained model root for resnet
-SKETCH_RESNET = '/data1/zzl/model/caffe2torch/mixed_triplet_loss/sketch/sketch_resnet_85.pth'
-PHOTO_RESNET = '/data1/zzl/model/caffe2torch/mixed_triplet_loss/photo/photo_resnet_85.pth'
+SKETCH_RESNET = '/Users/minglirui/gpt/SketchyDatabase/mixed_triplet_loss/sketch/sketch_resnet_85.pth'
+PHOTO_RESNET = '/Users/minglirui/gpt/SketchyDatabase/mixed_triplet_loss/photo/photo_resnet_85.pth'
 
 # The trained model root for vgg
-SKETCH_VGG = '/data1/zzl/model/caffe2torch/vgg_triplet_loss/sketch/sketch_vgg_190.pth'
-PHOTO_VGG = '/data1/zzl/model/caffe2torch/vgg_triplet_loss/photo/photo_vgg_190.pth'
+SKETCH_VGG = '/Users/minglirui/gpt/SketchyDatabase/vgg_triplet_loss/sketch/sketch_vgg_190.pth'
+PHOTO_VGG = '/Users/minglirui/gpt/SketchyDatabase/vgg_triplet_loss/photo/photo_vgg_190.pth'
 
-FINE_TUNE_RESNET = '/data1/zzl/model/caffe2torch/fine_tune/model_270.pth'
+FINE_TUNE_RESNET = '/Users/minglirui/gpt/SketchyDatabase/fine_tune/model_270.pth'
 
 device = 'cuda:1'
 

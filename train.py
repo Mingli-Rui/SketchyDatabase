@@ -15,22 +15,23 @@ def str2bool(v):
 def parase_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--photo_root', type=str, default='/data1/zzl/dataset/photo-train', help='Training photo root')
-    parser.add_argument('--sketch_root', type=str, default='/data1/zzl/dataset/sketch-triplet-train',
+    parser.add_argument('--photo_root', type=str, default='dataset/photo-train/tx_000000000000', help='Training photo root')
+    parser.add_argument('--sketch_root', type=str, default='dataset/sketch-triplet-train/tx_000000000000',
                         help='Training sketch root')
     parser.add_argument('--batch_size', type=int, default=16, help='The size of batch (default :16')
     parser.add_argument('--device', type=str, default='0', help='The cuda device to be used (default: 0)')
+    parser.add_argument('--support_cuda', type=str2bool, nargs='?', default=True, help='Set it as false (default: true) to use CPU if GPU is unavailable.')
     parser.add_argument('--epochs', type=int, default=1000, help='The number of epochs to run (default: 1000)')
     parser.add_argument('--lr', type=float, default=1e-5, help='The learning rate of the model')
     
     parser.add_argument('--test', type=str2bool, nargs='?', default=True)
     parser.add_argument('--test_f', type=int, default=5, help='The frequency of testing (default: 5)')
-    parser.add_argument('--photo_test', type=str, default='/data1/zzl/dataset/photo-test', help='Testing photo root')
-    parser.add_argument('--sketch_test', type=str, default='/data1/zzl/dataset/sketch-triplet-test',
+    parser.add_argument('--photo_test', type=str, default='dataset/photo-train/tx_000000000000', help='Testing photo root')
+    parser.add_argument('--sketch_test', type=str, default='dataset/sketch-triplet-train/tx_000000000000',
                         help='Testing sketch root')
 
     parser.add_argument('--save_model', type=str2bool, nargs='?', default=False)
-    parser.add_argument('--save_dir', type=str, default='/data1/zzl/model/caffe2torch/vgg_triplet_loss',
+    parser.add_argument('--save_dir', type=str, default='vgg_triplet_loss',
                         help='The folder to save the model status')
 
     parser.add_argument('--vis', type=str2bool, nargs='?', default=True, help='Whether to visualize')
@@ -88,6 +89,7 @@ def main():
     if args is None:
         exit()
 
+    print('epochs: ', args.epochs)
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.device)
 
     tripletNet = TripletNet(args)

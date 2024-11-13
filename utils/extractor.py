@@ -16,12 +16,13 @@ class Config(object):
 
 class Extractor(object):
 
-    def __init__(self, e_model, batch_size=128, cat_info=True,
+    def __init__(self, e_model, support_cuda, batch_size=128, cat_info=True,
                  vis=False, dataloader=False):
         self.batch_size = batch_size
         self.cat_info = cat_info
 
         self.model = e_model
+        self.support_cuda = support_cuda
 
         if dataloader:
             self.dataloader = dataloader
@@ -65,7 +66,7 @@ class Extractor(object):
                     image = Image.open(path)
                     image = self.transform(image)
                     image = image[None]
-                    image = image.cuda()
+                    image = image.cuda() if self.support_cuda else image
 
                     if self.vis:
                         self.viser.images(image.cpu().numpy() * 0.5 + 0.5, win='extractor')
@@ -104,7 +105,7 @@ class Extractor(object):
         dataset = dataloader.load_data()
 
         for i, data in enumerate(dataset):
-            image = data['I'].cuda()
+            image = data['I'].cuda() if self.support_cuda else data['I']
             name = data['N']
 
             out = self.model(image)

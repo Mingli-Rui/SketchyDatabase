@@ -20,13 +20,15 @@ class Tester(object):
 
         self.eps = 1e-8
 
+        self.support_cuda = opt.support_cuda
+
     @t.no_grad()
     def _extract_feature(self):
         with t.no_grad():
             self.photo_net.eval()
             self.sketch_net.eval()
 
-            extractor = Extractor(e_model=self.photo_net, vis=False, dataloader=True)
+            extractor = Extractor(e_model=self.photo_net, vis=False, dataloader=True, support_cuda=False)
             photo_data = extractor.extract(self.photo_test)
 
             extractor.reload_model(self.sketch_net)

@@ -30,6 +30,7 @@ class TripletNet(object):
         # self.device = opt.device
         self.epochs = opt.epochs
         self.lr = opt.lr
+        self.support_cuda = opt.support_cuda
 
         # testing config
         self.photo_test = opt.photo_test
@@ -66,18 +67,30 @@ class TripletNet(object):
 
     def _get_vgg16(self, pretrained=True):
         model = vgg16(pretrained=pretrained)
+        if self.fine_tune and pretrained:
+            for param in model.parameters():
+                param.requires_grad = False
+        # new layer enable grad by default
         model.classifier[6] = nn.Linear(in_features=4096, out_features=125, bias=True)
 
         return model
 
     def _get_resnet34(self, pretrained=True):
         model = resnet34(pretrained=pretrained)
+        if self.fine_tune and pretrained:
+            for param in model.parameters():
+                param.requires_grad = False
+        # new layer enable grad by default
         model.fc = nn.Linear(in_features=512, out_features=125)
 
         return model
 
     def _get_resnet50(self, pretrained=True):
         model = resnet50(pretrained=pretrained)
+        if self.fine_tune and pretrained:
+            for param in model.parameters():
+                param.requires_grad = False
+        # new layer enable grad by default
         model.fc = nn.Linear(in_features=2048, out_features=125)
 
         return model
@@ -85,30 +98,37 @@ class TripletNet(object):
     def train(self):
 
         if self.net == 'vgg16':
-            photo_net = DataParallel(self._get_vgg16()).cuda()
-            sketch_net = DataParallel(self._get_vgg16()).cuda()
+            photo_net = DataParallel(self._get_vgg16())
+            sketch_net = DataParallel(self._get_vgg16())
         elif self.net == 'resnet34':
-            photo_net = DataParallel(self._get_resnet34()).cuda()
-            sketch_net = DataParallel(self._get_resnet34()).cuda()
+            photo_net = DataParallel(self._get_resnet34())
+            sketch_net = DataParallel(self._get_resnet34())
         elif self.net == 'resnet50':
-            photo_net = DataParallel(self._get_resnet50()).cuda()
-            sketch_net = DataParallel(self._get_resnet50()).cuda()
+            photo_net = DataParallel(self._get_resnet50())
+            sketch_net = DataParallel(self._get_resnet50())
 
-        if self.fine_tune:
-            photo_net_root = self.model_root
-            sketch_net_root = self.model_root.replace('photo', 'sketch')
+        if self.support_cuda:
+            photo_net = photo_net.cuda()
+            sketch_net = sketch_net.cuda()
 
-            photo_net.load_state_dict(t.load(photo_net_root, map_location=t.device('cpu')))
-            sketch_net.load_state_dict(t.load(sketch_net_root, map_location=t.device('cpu')))
+        # TODO I think the model is pretrained model, it is not necessary to reload it again.
+        # update self._get_resnet50()/ self._get_resnet34() /self._get_vgg16()/ to set up for fine tune
+
+        # if self.fine_tune:
+        #     photo_net_root = self.model_root
+        #     sketch_net_root = self.model_root.replace('photo', 'sketch')
+        #
+        #     # photo_net.load_state_dict(t.load(photo_net_root, map_location=t.device('cpu')))
+        #     # sketch_net.load_state_dict(t.load(sketch_net_root, map_location=t.device('cpu')))
 
         print('net')
         print(photo_net)
 
         # triplet_loss = nn.TripletMarginLoss(margin=self.margin, p=self.p).cuda()
-        photo_cat_loss = nn.CrossEntropyLoss().cuda()
-        sketch_cat_loss = nn.CrossEntropyLoss().cuda()
+        photo_cat_loss = nn.CrossEntropyLoss().cuda() if self.support_cuda else nn.CrossEntropyLoss()
+        sketch_cat_loss = nn.CrossEntropyLoss().cuda() if self.support_cuda else nn.CrossEntropyLoss()
 
-        my_triplet_loss = TripletLoss().cuda()
+        my_triplet_loss = TripletLoss(self.support_cuda).cuda() if self.support_cuda else TripletLoss(self.support_cuda)
 
         # optimizer
         photo_optimizer = t.optim.Adam(photo_net.parameters(), lr=self.lr)
@@ -137,13 +157,15 @@ class TripletNet(object):
 
                 tester_config.photo_test = self.photo_test
                 tester_config.sketch_test = self.sketch_test
+                tester_config.support_cuda = self.support_cuda
 
                 tester = Tester(tester_config)
                 test_result = tester.test_instance_recall()
 
                 result_key = list(test_result.keys())
-                vis.plot('recall', np.array([test_result[result_key[0]], test_result[result_key[1]]]),
-                              legend=[result_key[0], result_key[1]])
+                if self.vis:
+                    vis.plot('recall', np.array([test_result[result_key[0]], test_result[result_key[1]]]),
+                                  legend=[result_key[0], result_key[1]])
                 if self.save_model:
                     t.save(photo_net.state_dict(), self.save_dir + '/photo' + '/photo_' + self.net + '_%s.pth' % epoch)
                     t.save(sketch_net.state_dict(), self.save_dir + '/sketch' + '/sketch_' + self.net + '_%s.pth' % epoch)
@@ -156,9 +178,9 @@ class TripletNet(object):
                 photo_optimizer.zero_grad()
                 sketch_optimizer.zero_grad()
 
-                photo = data['P'].cuda()
-                sketch = data['S'].cuda()
-                label = data['L'].cuda()
+                photo = data['P'].cuda() if self.support_cuda else data['P']
+                sketch = data['S'].cuda() if self.support_cuda else data['S']
+                label = data['L'].cuda() if self.support_cuda else data['L']
                 
                 p_cat, p_feature = photo_net(photo)
                 s_cat, s_feature = sketch_net(sketch)
@@ -221,10 +243,13 @@ class TripletNet(object):
                 photo_cat_loss_meter.reset()
                 sketch_cat_loss_meter.reset()
 
-
-
-
-
+        # save models in the end of test
+        if self.save_model:
+            photo_model_path = self.save_dir + '/photo' + '/photo_' + self.net + '_%s.pth' % epoch
+            sketch_model_path = self.save_dir + '/photo' + '/sketch_' + self.net + '_%s.pth' % epoch
+            print(f"write model in the end: {photo_model_path} {sketch_model_path}")
+            t.save(photo_net.state_dict(), photo_model_path)
+            t.save(sketch_net.state_dict(), sketch_model_path)
 
 
 

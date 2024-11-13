@@ -4,11 +4,12 @@ import torch.nn.functional as F
 
 
 class TripletLoss(nn.Module):
-    def __init__(self, p=2, m=0.3):
+    def __init__(self, support_cuda, p=2, m=0.3):
         super(TripletLoss, self).__init__()
 
         self.p = p
         self.m = m
+        self.support_cuda = support_cuda
 
     def forward(self, sketch, photo):
 
@@ -28,7 +29,7 @@ class TripletLoss(nn.Module):
         triplet_loss = pos_distance - negative_distance   # bs x bs x num_vec
         # print('TripletLoss.forward.triplet_loss', triplet_loss)
         triplet_loss = triplet_loss + self.m
-        eye = torch.eye(bs).cuda()
+        eye = torch.eye(bs).cuda() if self.support_cuda else torch.eye(bs)
         triplet_loss = triplet_loss * (1 - eye)
         triplet_loss = F.relu(triplet_loss)
 

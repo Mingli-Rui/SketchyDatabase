@@ -8,11 +8,6 @@ The [**homepage**](http://sketchy.eye.gatech.edu/) of the original project.
 
 Get the dataset via Google Drive [sketchydataset](https://drive.google.com/file/d/0B7ISyeE8QtDdTjE1MG9Gcy1kSkE/view?usp=sharing&resourcekey=0-r6nB4crmdU-LK7H38xnOUw) [SketchyDataset Intro](https://github.com/CDOTAD/SketchyDatabase/blob/master/SketchyDataset_README.md)
 
-# How to use it
-
-1. Download dataset
-
-
 # DataSet
 
 Sketchy Database
@@ -43,6 +38,64 @@ Dataset
   ├── photo-test                # the testing set of photos
   ├── sketch-triplet-test       # the testing set of sketches
 ```
+
+# How to prepare dataset for training and testing
+1. Download dataset via Google Drive from the link above. Suppose it is saved and unzipped as `/Users/minglirui/train_data/rendered_256x256`
+2. Use `prepare_dataset.py` to split dataset train and test dataset based on `test_img.txt` and `test_sketch.txt`.
+3. Below is an example to generate datasets to `/Users/minglirui/gpt/SketchyDatabase/dataset`
+```Bash
+python prepare_dataset.py \
+    --source_photo_root /Users/minglirui/train_data/rendered_256x256/256x256/photo/tx_000000000000 \
+    --source_sketch_root /Users/minglirui/train_data/rendered_256x256/256x256/sketch/tx_000000000000 \
+    --target /Users/minglirui/gpt/SketchyDatabase/dataset \
+    --clean_target false \
+    --test_image_files test_img.txt \
+    --test_sketch_files test_sketch.txt
+    
+ls /Users/minglirui/gpt/SketchyDatabase/dataset
+/Users/minglirui/gpt/SketchyDatabase/dataset:
+photo-test           photo-train          sketch-triplet-test  sketch-triplet-train
+
+(pytorch) ➜  tx_000000000000 ls /Users/minglirui/gpt/SketchyDatabase/dataset/
+photo-test           photo-train          sketch-triplet-test  sketch-triplet-train
+
+(pytorch) ➜  tx_000000000000 du -sh /Users/minglirui/gpt/SketchyDatabase/dataset/*
+ 74M	/Users/minglirui/gpt/SketchyDatabase/dataset/photo-test
+673M	/Users/minglirui/gpt/SketchyDatabase/dataset/photo-train
+ 50M	/Users/minglirui/gpt/SketchyDatabase/dataset/sketch-triplet-test
+426M	/Users/minglirui/gpt/SketchyDatabase/dataset/sketch-triplet-train
+```
+
+# How to run train
+1. After preparing dataset, we can train the model with `train.py`
+```Bash
+export MODEL=resnet34
+
+python3 train.py 
+    --photo_root /Users/minglirui/gpt/SketchyDatabase/dataset/photo-train \
+    --sketch_root /Users/minglirui/gpt/SketchyDatabase/dataset/sketch-triplet-train \
+    --photo_test /Users/minglirui/gpt/SketchyDatabase/dataset/photo-test \
+    --sketch_test /Users/minglirui/gpt/SketchyDatabase/dataset/sketch-triplet-test \
+	--batch_size 16 \
+	--device 0 \
+	--support_cuda false \
+	--epochs 1 \
+	--lr 0.00007 \
+	--test true \
+	--test_f 1 \
+	--save_model true \
+	--save_dir /Users/minglirui/gpt/SketchyDatabase/model-dir/ \
+	--vis false \
+	--env caffe2torch_tripletloss \
+	--fine_tune false \
+	--model_root /Users/minglirui/gpt/SketchyDatabase/model-dir/ \
+	--net $MODEL \
+	--cat true
+```
+2. `train.sh` is a script to run it.
+3. command in one line for debugging purpo
+
+
 # Test
 
 using [feature_extract.py](https://github.com/CDOTAD/SketchyDatabase/blob/master/feature/feature_extract.py) to get the extracted feature files ('\*.pkl')

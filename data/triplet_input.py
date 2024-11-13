@@ -78,6 +78,11 @@ class TripleDataset(data.Dataset):
             if sketch_name.split('-')[0] == fname:
                 sketch_rel.append(sketch_name)
 
+        if len(sketch_rel) <= 0:
+            sketch_rel.append(np.random.choice(sketchs))
+            # Suppose the model can tolerate single inaccurate sample.
+            print(f"Warning: Cannot find a corresponding sketch file for {photo_path}, randomly choose one: {sketch_rel[0]}")
+
         rnd = np.random.randint(0, len(sketch_rel))
 
         sketch = sketch_rel[rnd]

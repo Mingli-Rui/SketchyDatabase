@@ -245,6 +245,10 @@ class TripletNet(object):
 
         # save models in the end of test
         if self.save_model:
+            if not os.path.exists(os.path.join(self.save_dir, 'photo')):
+                os.makedirs(os.path.dirname(os.path.join(self.save_dir, 'photo')), exist_ok=True)
+            if not os.path.exists(os.path.join(self.save_dir, 'sketch')):
+                os.makedirs(os.path.dirname(os.path.join(self.save_dir, 'sketch')), exist_ok=True)
             photo_model_path = self.save_dir + '/photo' + '/photo_' + self.net + '_%s.pth' % epoch
             sketch_model_path = self.save_dir + '/photo' + '/sketch_' + self.net + '_%s.pth' % epoch
             print(f"write model in the end: {photo_model_path} {sketch_model_path}")
